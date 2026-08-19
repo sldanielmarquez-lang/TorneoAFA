@@ -1,0 +1,35 @@
+name: Compilar APK Torneo AFA
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Instalar Dependencias del Sistema
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libssl-dev cmake libffi-dev libltdl-dev python3-virtualenv
+
+      - name: Configurar Python Estable y Buildozer
+        run: |
+          pip3 install --upgrade pip setuptools wheel
+          pip3 install buildozer cython==0.29.33 python-for-android==2024.1.21
+
+      - name: Crear y Configurar buildozer.spec
+        run: |
+          buildozer init
+          sed -i 's/.*android.api =.*/android.api = 35/g' buildozer.spec
+          sed -i 's/.*android.minapi =.*/android.minapi = 24/g' buildozer.spec
+          sed -i 's/.*python_version =.*/python_version = 3.11/g' buildozer.spec
+
+      - name: Compilar APK sin trabas
+        run: |
+          P4A_python_version=3.11 yes | buildozer -v android debug
+
+      - name: Guardar APK como resultado
+        uses: actions/upload-artifact@v3
+        with:
+          name: Juego-Torneo-AFA
+          path: bin/*.apk
