@@ -19,6 +19,7 @@ internal static class Program
         var installationDirectory = AppContext.BaseDirectory;
         try
         {
+            ShowInfo("Buscando actualizaciones...");
             using var client = CreateHttpClient();
             var localVersion = ReadLocalVersion(installationDirectory);
             var release = await GetLatestReleaseAsync(client);
@@ -233,7 +234,16 @@ internal static class Program
             value = value[1..];
         }
 
-        return Version.TryParse(value, out version!);
+        if (!Version.TryParse(value, out version!))
+        {
+            return false;
+        }
+
+        // Releases and local files use the stable MAJOR.MINOR.PATCH form.
+        return version.Revision == -1
+            && version.Build >= 0
+            && version.Minor >= 0
+            && version.Major >= 0;
     }
 
     private static void LaunchGame(string installationDirectory)
